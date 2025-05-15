@@ -1,0 +1,45 @@
+CREATE TABLE `possible-sun-459212-r5.kimia_farma.tabel_analisis` AS 
+SELECT
+  tr.transaction_id,
+  tr.date,
+  tr.branch_id,
+  cb.branch_name,
+  cb.kota,
+  cb.provinsi,
+  cb.rating AS rating_cabang,
+  tr.customer_name,
+  tr.product_id,
+  pr.product_name,
+  tr.price AS actual_price,
+  tr.discount_percentage,
+
+  -- Hitung persentase gross laba berdasarkan harga
+  CASE
+    WHEN tr.price <= 50000 THEN 0.10
+    WHEN tr.price <= 100000 THEN 0.15
+    WHEN tr.price <= 300000 THEN 0.20
+    WHEN tr.price <= 500000 THEN 0.25
+    ELSE 0.30
+  END AS persentase_gross_laba,
+
+  -- Harga setelah diskon
+  tr.price * (1 - tr.discount_percentage) AS nett_sales,
+
+  -- Laba bersih setelah diskon dan margin
+  tr.price * (1 - tr.discount_percentage) *
+  CASE
+    WHEN tr.price <= 50000 THEN 0.10
+    WHEN tr.price <= 100000 THEN 0.15
+    WHEN tr.price <= 300000 THEN 0.20
+    WHEN tr.price <= 500000 THEN 0.25
+    ELSE 0.30
+  END AS nett_profit,
+
+  -- Rating transaksi dari pelanggan
+  tr.rating AS rating_transaksi
+
+FROM `possible-sun-459212-r5.kimia_farma.kf_final_transaction` tr
+JOIN `possible-sun-459212-r5.kimia_farma.kf_kantor_cabang` cb
+  ON tr.branch_id = cb.branch_id
+JOIN `possible-sun-459212-r5.kimia_farma.kf_product` pr
+  ON tr.product_id = pr.product_id;
